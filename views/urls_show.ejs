@@ -19,9 +19,9 @@
     <div class="card-body">
       <h5 class="card-title">Edit</h5>
       <p class="card-text">
-        <form>
+        <form method = "POST" action = "/urls/<%= shortURL %>/update">
           <label for="newURL">New URL:</label>
-          <input type="text" id="newURL" name="fname">
+          <input type="text" id="newURL" name="newURL">
           <input type="submit" value="Submit">
         </form>
       </p>
