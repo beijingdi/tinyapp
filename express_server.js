@@ -37,7 +37,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] , username:req.cookies['username']};
   res.render("urls_show", templateVars);
 });
 
@@ -70,6 +70,8 @@ app.post("/urls/:id/update", (req,res) => {
 
 // })
 
+
+
 app.post('/login', (req, res) => {
   res.cookie('username', req.body.username);
   
@@ -84,9 +86,14 @@ app.post('/login', (req, res) => {
 
 app.post('/logout', (req, res) => {
   res.clearCookie("username");
-  console.log(res.cookie['username']);
+  //console.log(res.cookie['username']);
   res.redirect("/urls");
 });
+
+app.get('/register', (req,res) => {
+  const templateVars = { username: req.cookies['username']};
+  res.render("user_new", templateVars);
+})
 
 
 
