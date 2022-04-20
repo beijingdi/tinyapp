@@ -82,13 +82,18 @@ app.post("/urls/:id/update", (req,res) => {
   res.redirect("/urls");
 })
 
+app.get('/login', (req, res) => {
+  const templateVars = { user: users[req.cookies['user_id']]};
+  res.render('user_login',templateVars);
+});
+
 app.post('/login', (req, res) => {
   res.cookie('username', req.body.username);
   res.redirect("/urls");
 });
 
 app.post('/logout', (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect("/urls");
 });
 
@@ -100,11 +105,11 @@ app.get('/register', (req,res) => {
 app.post('/register', (req,res) => {
   if (!req.body.email) {
     res.status(400);
-    res.send('e-mail cannot be empty');
+    return res.send('e-mail cannot be empty');
   }
   if (hasEmail(req.body.email)) {
     res.status(400);
-    res.send('email already exists');
+    return res.send('email already exists');
   }
   let newID = generateRandomString();
   users[newID] = {};
