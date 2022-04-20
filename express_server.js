@@ -47,6 +47,19 @@ const urlDatabase = {
     }
 };
 
+
+const urlsForUser = (id) => {
+  let userURL = {};
+  for (let url in urlDatabase) {
+    if (urlDatabase[url].userID === id) {
+      userURL[url] = urlDatabase[url];
+    }
+
+  }
+  return userURL;
+}
+
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -58,7 +71,7 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, user: users[req.cookies['user_id']] };
+  const templateVars = { urls: urlsForUser(users[req.cookies['user_id']]), user: users[req.cookies['user_id']] };
   res.render("urls_index", templateVars);
 });
 
@@ -92,8 +105,13 @@ app.get("/u/:shortURL", (req, res) => {
 // });
 
 app.post("/urls/:shortURL/delete", (req,res) => {
-  delete urlDatabase[req.params.shortURL];
-  res.redirect("/urls")
+  const templateVars = { user: users[req.cookies['user_id']]};
+  if (urlsForUser(users[req.cookies['user_id']]).hasOwnProperty(req.params.shortURL)) {
+    delete urlDatabase[req.params.shortURL];
+    return res.redirect("/urls")
+  }
+  res.render(user_login, templateVars);
+
 });
 
 app.post("/urls/:id/update", (req,res) => {
