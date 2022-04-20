@@ -11,6 +11,19 @@ app.use(bodyParser.urlencoded({extended: true}));
 const PORT = 8080; 
 app.set("view engine", "ejs")
 
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
+
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -28,7 +41,7 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username:req.cookies['username'] };
+  const templateVars = { urls: urlDatabase, user: users[req.cookies['user_id']] };
   res.render("urls_index", templateVars);
 });
 
@@ -37,7 +50,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] , username:req.cookies['username']};
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] , user: users[req.cookies['user_id']]};
   res.render("urls_show", templateVars);
 });
 
@@ -61,43 +74,31 @@ app.post("/urls/:id/update", (req,res) => {
   res.redirect("/urls");
 })
 
-// app.post("/login", (req,res) => {
-//   console.log(req.body.username);
-//   res.cookies.username = req.body.username;
-//   //assign the username to the new cookie
-//   console.log(req.cookies)
-//   res.redirect("/urls");
-
-// })
-
-
-
 app.post('/login', (req, res) => {
   res.cookie('username', req.body.username);
-  
-  //const userNameVars = {
-  //  userName: req.cookies["username"],
-  //};
-  //console.log(userNameVars);
-  //console.log(typeof(userNameVars));
-  //res.render("_header.ejs", userNameVars);
   res.redirect("/urls");
 });
 
 app.post('/logout', (req, res) => {
   res.clearCookie("username");
-  //console.log(res.cookie['username']);
   res.redirect("/urls");
 });
 
 app.get('/register', (req,res) => {
-  const templateVars = { username: req.cookies['username']};
+  const templateVars = { user: users[req.cookies['user_id']]};
   res.render("user_new", templateVars);
 })
 
+app.post('/register', (req,res) => {
+  let newID = generateRandomString();
+  users[newID] = {};
+  users[newID]["id"] = newID;
+  users[newID].email = req.body.email;
+  users[newID].password = req.body.password;
+  res.cookie("user_id", newID);
+  res.redirect("/urls");
 
-
-
+})
 
 
 app.listen(PORT, () => {
