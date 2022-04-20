@@ -24,6 +24,14 @@ const users = {
   }
 }
 
+const hasEmail = (email) => {
+  for (let user in users) {
+    if (users[user].email == email) {
+      return true;
+    }
+  }
+};
+
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -90,6 +98,14 @@ app.get('/register', (req,res) => {
 })
 
 app.post('/register', (req,res) => {
+  if (!req.body.email) {
+    res.status(400);
+    res.send('e-mail cannot be empty');
+  }
+  if (hasEmail(req.body.email)) {
+    res.status(400);
+    res.send('email already exists');
+  }
   let newID = generateRandomString();
   users[newID] = {};
   users[newID]["id"] = newID;
@@ -97,6 +113,7 @@ app.post('/register', (req,res) => {
   users[newID].password = req.body.password;
   res.cookie("user_id", newID);
   res.redirect("/urls");
+  console.log(users);
 
 })
 
