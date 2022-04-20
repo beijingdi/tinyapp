@@ -11,7 +11,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 const PORT = 8080; 
 app.set("view engine", "ejs")
 
-const users = { 
+let users = { 
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
@@ -27,9 +27,10 @@ const users = {
 const hasEmail = (email) => {
   for (let user in users) {
     if (users[user].email == email) {
-      return true;
+      return user;
     }
   }
+  return false;
 };
 
 
@@ -88,13 +89,26 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  res.cookie('username', req.body.username);
+  if (hasEmail(req.body.email) == false) {
+    console.log(hasEmail(req.body.email));
+    console.log(req.body.email);
+    console.log(users);
+    res.status(403);
+    return res.send("e-mail is not registered.");
+  }
+  if (req.body.password !== users[hasEmail(req.body.email)].password){
+    res.status(403);
+    return res.send("wrong password!");
+  }
+  res.cookie('user_id',users[hasEmail(req.body.email)].id);
+  const templateVars = {user: users[req.cookies['user_id']]};
   res.redirect("/urls");
 });
 
 app.post('/logout', (req, res) => {
   res.clearCookie("user_id");
   res.redirect("/urls");
+  console.log(users);
 });
 
 app.get('/register', (req,res) => {
@@ -120,7 +134,7 @@ app.post('/register', (req,res) => {
   res.redirect("/urls");
   console.log(users);
 
-})
+});
 
 
 app.listen(PORT, () => {
