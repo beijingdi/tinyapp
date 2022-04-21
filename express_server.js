@@ -54,7 +54,6 @@ app.get("/", (req, res) => {
   return res.redirect('login');
 
 });
-
 /*
 **get register page. if a user is logged in, redirect them to /urls. if a user is not logged in, redirect to registration page
 */
@@ -97,11 +96,11 @@ app.get('/login', (req, res) => {
   res.render('user_login',templateVars);
 });
 /*
-**post to login page
+**post to login page. display log-in status, encrypt cookie and redirect to /urls when succeeded, redirect to error page if failed. 
 */
-
 app.post('/login', (req, res) => {
-  if (getUserByEmail(req.body.email, users) == false) {
+  console.log(users);
+  if (getUserByEmail(req.body.email, users) === undefined) {
     res.status(403);
     return res.send('e-mail does not exist, please <a href="./register">register</a> first');
   }
@@ -109,43 +108,42 @@ app.post('/login', (req, res) => {
     res.status(403);
     return res.send('wrong password! Please <a href="./login">retry</a>');
   }
-  res.session('user_id',users[getUserByEmail(req.body.email, users)].id);
+  req.session.user_id = users[getUserByEmail(req.body.email, users)].id;
   const templateVars = {user: users[req.session['user_id']]};
   res.redirect("/urls");
 });
 
-
-
-
 /*
-**create new url page - only logged in users can access
+**access create new url page - only logged in users can access
 */
 app.get('/urls/new', (req, res) => {
   if (req.session['user_id']) {
     const templateVars = {  user: users[req.session['user_id']] }
-    return res.render('urls_new', templateVars)
+    return res.render('urls_new', templateVars);
   }
-  res.status(403).send('Please <a href="./login">login</a>');
+  res.status(403).send('Please <a href="../../login">login</a>');
   
 })
+/*
+**create a tiny url and redirct to the page with url info in logged in, returns an error if not
+*/
+app.post('/urls',(req, res) => {
+  if (req.session['user_id']) {
+    let newShortURL = generateRandomString();
+    urlDatabase[newShortURL] = { longURL: req.body.longURL, userID: req.session.user_id };
+    return res.redirect(`/urls/${newShortURL}`);
+  }
+  res.status(403).send('Please <a href="/login">login</a>')
+});
 
+/*
+** display all urls a user created
+*/
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlsForUser(users[req.session['user_id']], urlDatabase), user: users[req.session['user_id']] };
+  const templateVars = { urls: urlsForUser(req.session['user_id'], urlDatabase), user: req.session['user_id']};
+  console.log(templateVars);
   res.render("urls_index", templateVars);
 });
-
-app.get("/urls/new", (req, res) => {
-  const templateVars = { user: users[req.session['user_id']] };
-  if (req.session['user_id']) {
-    console.log(req.session['user_id']);
-    res.status(400);
-    res.send("please register first");
-    return res.render("urls_new", templateVars);
-  }
-  res.render("user_login", templateVars);
-  
-});
-
 
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -158,10 +156,7 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
-// app.post("/urls", (req, res) => {
-//   console.log(req.body);  // Log the POST request body to the console
-//   res.send("Ok");         // Respond with 'Ok' (we will replace this)
-// });
+
 
 app.post("/urls/:shortURL/delete", (req,res) => {
   const templateVars = { user: users[req.session['user_id']]};
@@ -196,6 +191,10 @@ app.post('/logout', (req, res) => {
 // });
 // app.get("/hello", (req, res) => {
 //   res.send("<html><body>Hello <b>World</b></body></html>\n");
+// });
+// app.post("/urls", (req, res) => {
+//   console.log(req.body);  // Log the POST request body to the console
+//   res.send("Ok");         // Respond with 'Ok' (we will replace this)
 // });
 
 app.listen(PORT, () => {

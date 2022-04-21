@@ -14,11 +14,12 @@ const generateRandomString = () => {
 const urlsForUser = (id, database) => {
   let userURL = {};
   for (let url in database) {
-    if (database[url].userID === id) {
+    if (database[url].userID == id) {
+      userURL = {};
       userURL[url] = database[url];
     }
-
   }
   return userURL;
 }
 module.exports = {getUserByEmail, generateRandomString, urlsForUser};
+//console.log(urlsForUser(user_id, urlDatabase));
