@@ -2,6 +2,7 @@
 function generateRandomString() {
   return Math.random().toString(36).slice(7);
 }
+const {getUserByEmail} = require('./helper');
 const express = require("express");
 const cookieSession = require('cookie-session')
 const bcrypt = require('bcryptjs');
@@ -31,14 +32,6 @@ let users = {
   }
 }
 
-const hasEmail = (email) => {
-  for (let user in users) {
-    if (users[user].email == email) {
-      return user;
-    }
-  }
-  return false;
-};
 
 
 
@@ -134,21 +127,21 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
   console.log(req.body.password);
   console.log(typeof(req.body.password));
-  if (hasEmail(req.body.email) == false) {
+  if (getUserByEmail(req.body.email, users) == false) {
     res.status(403);
     return res.send("e-mail is not registered.");
   }
-  if (!bcrypt.compareSync(req.body.password, users[hasEmail(req.body.email)].hashedPassword)){
+  if (!bcrypt.compareSync(req.body.password, users[getUserByEmail(req.body.email, users)].hashedPassword)){
     res.status(403);
     return res.send("wrong password!");
   }
-  res.session('user_id',users[hasEmail(req.body.email)].id);
+  res.session('user_id',users[getUserByEmail(req.body.email, users)].id);
   const templateVars = {user: users[req.session['user_id']]};
   res.redirect("/urls");
 });
 
 app.post('/logout', (req, res) => {
-  res.clearsession("user_id");
+  delete req.session["user_id"];
   res.redirect("/urls");
   console.log(users);
 });
@@ -163,7 +156,7 @@ app.post('/register', (req,res) => {
     res.status(400);
     return res.send('e-mail cannot be empty');
   }
-  if (hasEmail(req.body.email)) {
+  if (getUserByEmail(req.body.email, users)) {
     res.status(400);
     return res.send('email already exists');
   }
