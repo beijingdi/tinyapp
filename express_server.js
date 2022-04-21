@@ -1,14 +1,14 @@
-
+/*
+** Initialization
+*/
 const {getUserByEmail, generateRandomString, urlsForUser} = require('./helpers');
-
 const express = require("express");
 const app = express();
 const cookieSession = require('cookie-session')
 const bodyParser = require("body-parser");
 const bcrypt = require('bcryptjs');
+const { existsSync } = require('fs');
 const PORT = 8080; 
-
-
 const salt = bcrypt.genSaltSync(18);
 app.use(cookieSession({
   name: 'session',
@@ -17,7 +17,9 @@ app.use(cookieSession({
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs")
 
-
+/*
+**database
+*/
 const urlDatabase = {
   b6UTxQ: {
         longURL: "https://www.tsn.ca",
@@ -28,8 +30,6 @@ const urlDatabase = {
         userID: "aJ48lW"
     }
 };
-
-
 let users = { 
   "userRandomID": {
     id: "userRandomID", 
@@ -44,9 +44,6 @@ let users = {
 }
 
 
-
-
-
 /*
 **if user is logged in: redirect to /urls; if user is not logged in: redirect to /login
 */
@@ -59,7 +56,7 @@ app.get("/", (req, res) => {
 });
 
 /*
-**register page. if a user is logged in, redirect them to /urls
+**get register page. if a user is logged in, redirect them to /urls. if a user is not logged in, redirect to registration page
 */
 app.get('/register', (req,res) => {
   if(req.session['user_id']){
@@ -68,7 +65,9 @@ app.get('/register', (req,res) => {
   const templateVars = { user: users[req.session['user_id']]};
   res.render("user_new", templateVars);
 })
-
+/*
+**post to register page: return error if email exists or is empty, redirect to /urls when registered successfully
+*/
 app.post('/register', (req,res) => {
   if (!req.body.email) {
     res.status(400);
@@ -87,6 +86,37 @@ app.post('/register', (req,res) => {
   res.redirect("/urls");
 
 });
+/*
+**get login page, redirct to /urls if already logged in
+*/
+app.get('/login', (req, res) => {
+  if (req.session['user_id']) {
+    return res.redirect('/urls');
+  }
+  const templateVars = { user: users[req.session['user_id']]};
+  res.render('user_login',templateVars);
+});
+/*
+**post to login page
+*/
+
+app.post('/login', (req, res) => {
+  if (getUserByEmail(req.body.email, users) == false) {
+    res.status(403);
+    return res.send('e-mail does not exist, please <a href="./register">register</a> first');
+  }
+  if (!bcrypt.compareSync(req.body.password, users[getUserByEmail(req.body.email, users)].hashedPassword)){
+    res.status(403);
+    return res.send('wrong password! Please <a href="./login">retry</a>');
+  }
+  res.session('user_id',users[getUserByEmail(req.body.email, users)].id);
+  const templateVars = {user: users[req.session['user_id']]};
+  res.redirect("/urls");
+});
+
+
+
+
 /*
 **create new url page - only logged in users can access
 */
@@ -148,26 +178,9 @@ app.post("/urls/:id/update", (req,res) => {
   res.redirect("/urls");
 })
 
-app.get('/login', (req, res) => {
-  const templateVars = { user: users[req.session['user_id']]};
-  res.render('user_login',templateVars);
-});
 
-app.post('/login', (req, res) => {
-  console.log(req.body.password);
-  console.log(typeof(req.body.password));
-  if (getUserByEmail(req.body.email, users) == false) {
-    res.status(403);
-    return res.send("e-mail is not registered.");
-  }
-  if (!bcrypt.compareSync(req.body.password, users[getUserByEmail(req.body.email, users)].hashedPassword)){
-    res.status(403);
-    return res.send("wrong password!");
-  }
-  res.session('user_id',users[getUserByEmail(req.body.email, users)].id);
-  const templateVars = {user: users[req.session['user_id']]};
-  res.redirect("/urls");
-});
+
+
 
 app.post('/logout', (req, res) => {
   delete req.session["user_id"];
