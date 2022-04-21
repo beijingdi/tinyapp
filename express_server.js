@@ -1,22 +1,20 @@
-//Initialization uwu
-function generateRandomString() {
-  return Math.random().toString(36).slice(7);
-}
-const {getUserByEmail} = require('./helper');
-const express = require("express");
-const cookieSession = require('cookie-session')
-const bcrypt = require('bcryptjs');
 
+const {getUserByEmail, generateRandomString, urlsForUser, urlDatabase} = require('./helpers');
+
+const express = require("express");
 const app = express();
+const cookieSession = require('cookie-session')
+const bodyParser = require("body-parser");
+const bcrypt = require('bcryptjs');
+const PORT = 8080; 
+
+
+const salt = bcrypt.genSaltSync(18);
 app.use(cookieSession({
   name: 'session',
-  keys: ["woot woot you will never guessed it blah", ]
+  keys: [salt, "Do you want more salt?" ]
 }));
-
-
-const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
-const PORT = 8080; 
 app.set("view engine", "ejs")
 
 let users = { 
@@ -36,39 +34,25 @@ let users = {
 
 
 
-const urlDatabase = {
-  b6UTxQ: {
-        longURL: "https://www.tsn.ca",
-        userID: "aJ48lW"
-    },
-  i3BoGr: {
-        longURL: "https://www.google.ca",
-        userID: "aJ48lW"
-    }
-};
-
-
-const urlsForUser = (id) => {
-  let userURL = {};
-  for (let url in urlDatabase) {
-    if (urlDatabase[url].userID === id) {
-      userURL[url] = urlDatabase[url];
-    }
-
-  }
-  return userURL;
-}
-
-
+/*
+**if user is logged in: redirect to /urls; if user is not logged in: redirect to /login
+*/
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  if (req.session['user_id']) {
+    return res.redirect('/urls');
+  }
+  return res.redirect('login');
+
 });
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
+
+app.get('/urls/new', (req, res) => {
+  if (req.session['user_id']) {
+    const templateVars = {  user: users[req.session['user_id']] }
+    return res.render('urls_new', templateVars)
+  }
+  
+  
+})
 
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlsForUser(users[req.session['user_id']]), user: users[req.session['user_id']] };
@@ -167,10 +151,16 @@ app.post('/register', (req,res) => {
   users[newID].hashedPassword = bcrypt.hashSync(req.body.password, 10);
   req.session["user_id"] = newID;
   res.redirect("/urls");
-  console.log(users);
 
 });
 
+
+// app.get("/urls.json", (req, res) => {
+//   res.json(urlDatabase);
+// });
+// app.get("/hello", (req, res) => {
+//   res.send("<html><body>Hello <b>World</b></body></html>\n");
+// });
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
