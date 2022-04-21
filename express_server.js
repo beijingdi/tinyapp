@@ -51,7 +51,7 @@ app.get("/", (req, res) => {
   if (req.session['user_id']) {
     return res.redirect('/urls');
   }
-  return res.redirect('login');
+  return res.redirect('/login');
 
 });
 /*
@@ -99,7 +99,6 @@ app.get('/login', (req, res) => {
 **post to login page. display log-in status, encrypt cookie and redirect to /urls when succeeded, redirect to error page if failed. 
 */
 app.post('/login', (req, res) => {
-  console.log(users);
   if (getUserByEmail(req.body.email, users) === undefined) {
     res.status(403);
     return res.send('e-mail does not exist, please <a href="./register">register</a> first');
@@ -109,7 +108,6 @@ app.post('/login', (req, res) => {
     return res.send('wrong password! Please <a href="./login">retry</a>');
   }
   req.session.user_id = users[getUserByEmail(req.body.email, users)].id;
-  const templateVars = {user: users[req.session['user_id']]};
   res.redirect("/urls");
 });
 
@@ -135,44 +133,66 @@ app.post('/urls',(req, res) => {
   }
   res.status(403).send('Please <a href="/login">login</a>')
 });
-
 /*
 ** display all urls a user created
 */
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlsForUser(req.session['user_id'], urlDatabase), user: req.session['user_id']};
-  console.log(templateVars);
-  res.render("urls_index", templateVars);
+  if (req.session['user_id']) {
+    const templateVars = { urls: urlsForUser(req.session['user_id'], urlDatabase), user: req.session['user_id']};
+    return res.render("urls_index", templateVars);
+  }
+  res.status(403).send('Please <a href="/login">login</a>');
 });
 
-
-app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]["longURL"] , user: users[req.session['user_id']]};
-  res.render("urls_show", templateVars);
+/*
+** Only the owner can access the page for shortURL. 
+*/ 
+app.get("/urls/:id", (req, res) => {
+  if (!req.session['user_id']) {
+    return res.send('Please <a href="../../login">login</a>');
+  }
+  if (urlDatabase[req.params.id].userID !== req.session['user_id']) {
+    return res.send('Access denied.Please <a href="../../login">login</a> as the owner');
+  }
+  if (urlDatabase[req.params.id].id !== req.session['user_id']){
+    const templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id]["longURL"] , user: req.session['user_id']};
+    return res.render("urls_show", templateVars);
+  }
 });
-
-app.get("/u/:shortURL", (req, res) => {
-  const longURL = "www.google.com";
-  res.redirect(longURL);
-});
-
-
-
+/*
+**post request to edit the long url for a short url
+*/
+app.post("/urls/:id", (req,res) => {
+  if (!req.session['user_id']) {
+    return res.send('Please <a href="../../login">login</a>');
+  }
+  if (urlDatabase[req.params.id].userID !== req.session['user_id']) {
+    return res.send('Access denied.Please <a href="../../login">login</a> as the owner');
+  }
+  if (urlDatabase[req.params.id].id !== req.session['user_id']) {
+    urlDatabase[req.params.id].longURL = req.body.newURL;
+    return res.redirect("/urls");
+  }
+})
+/*
+**delete the URL record. Only owner can access
+*/
 app.post("/urls/:shortURL/delete", (req,res) => {
   const templateVars = { user: users[req.session['user_id']]};
   if (urlsForUser(users[req.session['user_id']], urlDatabase).hasOwnProperty(req.params.shortURL)) {
     delete urlDatabase[req.params.shortURL];
     return res.redirect("/urls")
   }
-  res.render(user_login, templateVars);
+  res.render(login, templateVars);
 
 });
 
-app.post("/urls/:id/update", (req,res) => {
-  urlDatabase[req.params.id] = req.body.newURL;
-  res.redirect("/urls");
-})
 
+
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = "www.google.com";
+  res.redirect(longURL);
+});
 
 
 
