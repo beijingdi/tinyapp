@@ -1,5 +1,5 @@
 
-const {getUserByEmail, generateRandomString, urlsForUser, urlDatabase} = require('./helpers');
+const {getUserByEmail, generateRandomString, urlsForUser} = require('./helpers');
 
 const express = require("express");
 const app = express();
@@ -16,6 +16,19 @@ app.use(cookieSession({
 }));
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs")
+
+
+const urlDatabase = {
+  b6UTxQ: {
+        longURL: "https://www.tsn.ca",
+        userID: "aJ48lW"
+    },
+  i3BoGr: {
+        longURL: "https://www.google.ca",
+        userID: "aJ48lW"
+    }
+};
+
 
 let users = { 
   "userRandomID": {
@@ -45,17 +58,49 @@ app.get("/", (req, res) => {
 
 });
 
+/*
+**register page. if a user is logged in, redirect them to /urls
+*/
+app.get('/register', (req,res) => {
+  if(req.session['user_id']){
+    return res.redirect('/urls');
+  }
+  const templateVars = { user: users[req.session['user_id']]};
+  res.render("user_new", templateVars);
+})
+
+app.post('/register', (req,res) => {
+  if (!req.body.email) {
+    res.status(400);
+    return res.send('e-mail cannot be empty. Please <a href="./register">retry</a>');
+  }
+  if (getUserByEmail(req.body.email, users)) {
+    res.status(400);
+    return res.send('email already exists. Please <a href="./register">retry</a>');
+  }
+  let newID = generateRandomString();
+  users[newID] = {};
+  users[newID]["id"] = newID;
+  users[newID].email = req.body.email;
+  users[newID].hashedPassword = bcrypt.hashSync(req.body.password);
+  req.session["user_id"] = newID;
+  res.redirect("/urls");
+
+});
+/*
+**create new url page - only logged in users can access
+*/
 app.get('/urls/new', (req, res) => {
   if (req.session['user_id']) {
     const templateVars = {  user: users[req.session['user_id']] }
     return res.render('urls_new', templateVars)
   }
-  
+  res.status(403).send('Please <a href="./login">login</a>');
   
 })
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlsForUser(users[req.session['user_id']]), user: users[req.session['user_id']] };
+  const templateVars = { urls: urlsForUser(users[req.session['user_id']], urlDatabase), user: users[req.session['user_id']] };
   res.render("urls_index", templateVars);
 });
 
@@ -90,7 +135,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.post("/urls/:shortURL/delete", (req,res) => {
   const templateVars = { user: users[req.session['user_id']]};
-  if (urlsForUser(users[req.session['user_id']]).hasOwnProperty(req.params.shortURL)) {
+  if (urlsForUser(users[req.session['user_id']], urlDatabase).hasOwnProperty(req.params.shortURL)) {
     delete urlDatabase[req.params.shortURL];
     return res.redirect("/urls")
   }
@@ -130,29 +175,7 @@ app.post('/logout', (req, res) => {
   console.log(users);
 });
 
-app.get('/register', (req,res) => {
-  const templateVars = { user: users[req.session['user_id']]};
-  res.render("user_new", templateVars);
-})
 
-app.post('/register', (req,res) => {
-  if (!req.body.email) {
-    res.status(400);
-    return res.send('e-mail cannot be empty');
-  }
-  if (getUserByEmail(req.body.email, users)) {
-    res.status(400);
-    return res.send('email already exists');
-  }
-  let newID = generateRandomString();
-  users[newID] = {};
-  users[newID]["id"] = newID;
-  users[newID].email = req.body.email;
-  users[newID].hashedPassword = bcrypt.hashSync(req.body.password, 10);
-  req.session["user_id"] = newID;
-  res.redirect("/urls");
-
-});
 
 
 // app.get("/urls.json", (req, res) => {

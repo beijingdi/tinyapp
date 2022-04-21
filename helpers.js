@@ -1,16 +1,3 @@
-const urlDatabase = {
-  b6UTxQ: {
-        longURL: "https://www.tsn.ca",
-        userID: "aJ48lW"
-    },
-  i3BoGr: {
-        longURL: "https://www.google.ca",
-        userID: "aJ48lW"
-    }
-};
-
-
-
 const getUserByEmail = (email, database) => {
   for (let user in database) {
     if (database[user].email == email) {
@@ -24,14 +11,14 @@ const generateRandomString = () => {
 }
 
 
-const urlsForUser = (id) => {
+const urlsForUser = (id, database) => {
   let userURL = {};
-  for (let url in urlDatabase) {
-    if (urlDatabase[url].userID === id) {
-      userURL[url] = urlDatabase[url];
+  for (let url in database) {
+    if (database[url].userID === id) {
+      userURL[url] = database[url];
     }
 
   }
   return userURL;
 }
-module.exports = {getUserByEmail, generateRandomString, urlsForUser,urlDatabase};
+module.exports = {getUserByEmail, generateRandomString, urlsForUser};
