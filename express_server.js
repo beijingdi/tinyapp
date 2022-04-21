@@ -3,7 +3,7 @@ function generateRandomString() {
   return Math.random().toString(36).slice(7);
 }
 const express = require("express");
-const cookieParser = require('cookie-parser')
+const sessionession = require('cookie-session')
 const bcrypt = require('bcryptjs');
 const password = "purple-monkey-dinosaur"; // found in the req.params object
 
@@ -74,14 +74,14 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlsForUser(users[req.cookies['user_id']]), user: users[req.cookies['user_id']] };
+  const templateVars = { urls: urlsForUser(users[req.session['user_id']]), user: users[req.session['user_id']] };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { user: users[req.cookies['user_id']] };
-  if (req.cookies['user_id']) {
-    console.log(req.cookies['user_id']);
+  const templateVars = { user: users[req.session['user_id']] };
+  if (req.session['user_id']) {
+    console.log(req.session['user_id']);
     res.status(400);
     res.send("please register first");
     return res.render("urls_new", templateVars);
@@ -93,7 +93,7 @@ app.get("/urls/new", (req, res) => {
 
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]["longURL"] , user: users[req.cookies['user_id']]};
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]["longURL"] , user: users[req.session['user_id']]};
   res.render("urls_show", templateVars);
 });
 
@@ -108,8 +108,8 @@ app.get("/u/:shortURL", (req, res) => {
 // });
 
 app.post("/urls/:shortURL/delete", (req,res) => {
-  const templateVars = { user: users[req.cookies['user_id']]};
-  if (urlsForUser(users[req.cookies['user_id']]).hasOwnProperty(req.params.shortURL)) {
+  const templateVars = { user: users[req.session['user_id']]};
+  if (urlsForUser(users[req.session['user_id']]).hasOwnProperty(req.params.shortURL)) {
     delete urlDatabase[req.params.shortURL];
     return res.redirect("/urls")
   }
@@ -123,7 +123,7 @@ app.post("/urls/:id/update", (req,res) => {
 })
 
 app.get('/login', (req, res) => {
-  const templateVars = { user: users[req.cookies['user_id']]};
+  const templateVars = { user: users[req.session['user_id']]};
   res.render('user_login',templateVars);
 });
 
@@ -139,7 +139,7 @@ app.post('/login', (req, res) => {
     return res.send("wrong password!");
   }
   res.cookie('user_id',users[hasEmail(req.body.email)].id);
-  const templateVars = {user: users[req.cookies['user_id']]};
+  const templateVars = {user: users[req.session['user_id']]};
   res.redirect("/urls");
 });
 
@@ -150,7 +150,7 @@ app.post('/logout', (req, res) => {
 });
 
 app.get('/register', (req,res) => {
-  const templateVars = { user: users[req.cookies['user_id']]};
+  const templateVars = { user: users[req.session['user_id']]};
   res.render("user_new", templateVars);
 })
 
