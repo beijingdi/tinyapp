@@ -3,12 +3,16 @@ function generateRandomString() {
   return Math.random().toString(36).slice(7);
 }
 const express = require("express");
-const sessionession = require('cookie-session')
+const cookieSession = require('cookie-session')
 const bcrypt = require('bcryptjs');
-const password = "purple-monkey-dinosaur"; // found in the req.params object
 
 const app = express();
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ["woot woot you will never guessed it blah", ]
+}));
+
+
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 const PORT = 8080; 
@@ -138,13 +142,13 @@ app.post('/login', (req, res) => {
     res.status(403);
     return res.send("wrong password!");
   }
-  res.cookie('user_id',users[hasEmail(req.body.email)].id);
+  res.session('user_id',users[hasEmail(req.body.email)].id);
   const templateVars = {user: users[req.session['user_id']]};
   res.redirect("/urls");
 });
 
 app.post('/logout', (req, res) => {
-  res.clearCookie("user_id");
+  res.clearsession("user_id");
   res.redirect("/urls");
   console.log(users);
 });
@@ -168,7 +172,7 @@ app.post('/register', (req,res) => {
   users[newID]["id"] = newID;
   users[newID].email = req.body.email;
   users[newID].hashedPassword = bcrypt.hashSync(req.body.password, 10);
-  res.cookie("user_id", newID);
+  req.session["user_id"] = newID;
   res.redirect("/urls");
   console.log(users);
 
