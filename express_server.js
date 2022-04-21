@@ -4,6 +4,9 @@ function generateRandomString() {
 }
 const express = require("express");
 const cookieParser = require('cookie-parser')
+const bcrypt = require('bcryptjs');
+const password = "purple-monkey-dinosaur"; // found in the req.params object
+
 const app = express();
 app.use(cookieParser());
 const bodyParser = require("body-parser");
@@ -125,14 +128,13 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
+  console.log(req.body.password);
+  console.log(typeof(req.body.password));
   if (hasEmail(req.body.email) == false) {
-    console.log(hasEmail(req.body.email));
-    console.log(req.body.email);
-    console.log(users);
     res.status(403);
     return res.send("e-mail is not registered.");
   }
-  if (req.body.password !== users[hasEmail(req.body.email)].password){
+  if (!bcrypt.compareSync(req.body.password, users[hasEmail(req.body.email)].hashedPassword)){
     res.status(403);
     return res.send("wrong password!");
   }
@@ -165,7 +167,7 @@ app.post('/register', (req,res) => {
   users[newID] = {};
   users[newID]["id"] = newID;
   users[newID].email = req.body.email;
-  users[newID].password = req.body.password;
+  users[newID].hashedPassword = bcrypt.hashSync(req.body.password, 10);
   res.cookie("user_id", newID);
   res.redirect("/urls");
   console.log(users);
