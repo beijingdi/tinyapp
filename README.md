@@ -24,6 +24,8 @@ URL Edit Page - Logged in user edit the short URLs created by themselves by assi
 !["URL Edit Page - Logged in user edit the short URLs created by themselves by assigning new long URLs to them"](https://github.com/beijingdi/tinyapp/blob/master/docs/editURL.png)
 
 
+(Update)URL Edit Page - Via the edit URL page, logged in user can see total number of visits, number of individual signed in visitors, and a table of timestaps and username for each logged in visit.
+(https://github.com/beijingdi/tinyapp/blob/master/docs/Analysis.png)
 ## Dependencies
 
 - Node.js
