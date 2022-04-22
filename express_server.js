@@ -32,6 +32,7 @@ const urlDatabase = {
         userID: "aJ48lW"
     }
 };
+
 let users = { 
   "userRandomID": {
     id: "userRandomID", 
@@ -45,6 +46,11 @@ let users = {
   }
 }
 
+let visited = {
+  "b6UTxQ": {
+    timesVisited: 0
+  }
+};
 
 /*
 **if user is logged in: redirect to /urls; if user is not logged in: redirect to /login
@@ -131,7 +137,9 @@ app.post('/urls',(req, res) => {
   if (req.session['user_id']) {
     let newShortURL = generateRandomString();
     urlDatabase[newShortURL] = { longURL: req.body.longURL, userID: req.session.user_id };
-    console.log(urlDatabase);
+    visited[newShortURL] = {timesVisited: 0};
+    //visited[newShortURL].timesVisited = 0;
+    console.log(visited);
     return res.redirect(`/urls/${newShortURL}`);
   }
   res.status(403).send('Please <a href="/login">login</a>')
@@ -161,7 +169,8 @@ app.get("/urls/:id", (req, res) => {
     return res.status(403).send('Access denied.Please <a href="../../login">login</a> as the owner');
   }
   if (urlDatabase[req.params.id].id !== req.session['user_id']){
-    const templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id]["longURL"] , user: users[req.session['user_id']]};
+    const templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id]["longURL"] , user: users[req.session['user_id']], visited: visited[req.params.id]};
+    console.log(templateVars);
     return res.render("urls_show", templateVars);
   }
 });
@@ -203,6 +212,7 @@ app.get("/u/:id", (req, res) => {
   if (!urlDatabase.hasOwnProperty(req.params.id)) {
     return res.status(403).send('URL does not exist.');
   }
+  visited[req.params.id].timesVisited++;
   return res.redirect(urlDatabase[req.params.id].longURL);
 });
 /*
