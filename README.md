@@ -32,6 +32,7 @@ URL Edit Page - Logged in user edit the short URLs created by themselves by assi
 - bcrypt
 - body-parser
 - cookie-session
+- method-override
 
 
 ## Getting Started

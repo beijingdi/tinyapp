@@ -7,15 +7,18 @@ const app = express();
 const cookieSession = require('cookie-session')
 const bodyParser = require("body-parser");
 const bcrypt = require('bcryptjs');
-const { existsSync } = require('fs');
+const methodOverride = require('method-override');
+
 const PORT = 8080; 
 const salt = bcrypt.genSaltSync(18);
+app.use(methodOverride('_method'));
 app.use(cookieSession({
   name: 'session',
   keys: [salt, "Do you want more salt?" ]
 }));
 app.use(bodyParser.urlencoded({extended: true}));
-app.set("view engine", "ejs")
+app.set("view engine", "ejs");
+
 /*
 **database
 */
@@ -165,7 +168,7 @@ app.get("/urls/:id", (req, res) => {
 /*
 **post request to edit the long url for a short url
 */
-app.post("/urls/:id", (req,res) => {
+app.put("/urls/:id", (req,res) => {
   if (!req.session['user_id']) {
     return res.status(403).send('Please <a href="../../login">login</a>');
   }
@@ -180,7 +183,7 @@ app.post("/urls/:id", (req,res) => {
 /*
 **delete the URL record. Only owner can access
 */
-app.post("/urls/:id/delete", (req,res) => {
+app.delete("/urls/:id/delete", (req,res) => {
   if (!req.session['user_id']) {
     return res.status(403).send('Please <a href="../../login">login</a>');
   }
