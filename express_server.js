@@ -68,11 +68,11 @@ app.get('/register', (req,res) => {
 */
 app.post('/register', (req,res) => {
   if (!req.body.email) {
-    res.status(400);
+    res.status(403);
     return res.send('e-mail cannot be empty. Please <a href="./register">retry</a>');
   }
   if (getUserByEmail(req.body.email, users)) {
-    res.status(400);
+    res.status(403);
     return res.send('email already exists. Please <a href="./register">retry</a>');
   }
   let newID = generateRandomString();
