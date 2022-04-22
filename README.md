@@ -16,7 +16,7 @@ Creat URL Page - Logged in user can create shortened URLs with any URL inputs
 
 
 URL Display Page - Logged in user can view, edit or delete the short URLs they created
-!["URL Display Page - Logged in user can view, edit or delete the short URLs they created"](https://github.com/beijingdi/tinyapp/blob/master/docs/editURL.png)
+!["URL Display Page - Logged in user can view, edit or delete the short URLs they created"](https://github.com/beijingdi/tinyapp/blob/master/docs/showURL.png)
 
 
 
