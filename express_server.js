@@ -16,7 +16,6 @@ app.use(cookieSession({
 }));
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs")
-
 /*
 **database
 */
@@ -129,6 +128,7 @@ app.post('/urls',(req, res) => {
   if (req.session['user_id']) {
     let newShortURL = generateRandomString();
     urlDatabase[newShortURL] = { longURL: req.body.longURL, userID: req.session.user_id };
+    console.log(urlDatabase);
     return res.redirect(`/urls/${newShortURL}`);
   }
   res.status(403).send('Please <a href="/login">login</a>')
@@ -138,7 +138,7 @@ app.post('/urls',(req, res) => {
 */
 app.get("/urls", (req, res) => {
   if (req.session['user_id']) {
-    const templateVars = { urls: urlsForUser(req.session['user_id'], urlDatabase), user: req.session['user_id']};
+    const templateVars = { urls: urlsForUser(req.session['user_id'], urlDatabase), user: users[req.session['user_id']]};
     return res.render("urls_index", templateVars);
   }
   res.status(403).send('Please <a href="/login">login</a>');
@@ -149,13 +149,16 @@ app.get("/urls", (req, res) => {
 */ 
 app.get("/urls/:id", (req, res) => {
   if (!req.session['user_id']) {
-    return res.send('Please <a href="../../login">login</a>');
+    return res.status(403).send('Please <a href="../../login">login</a>');
+  }
+  if (!urlDatabase.hasOwnProperty(req.params.id)) {
+    return res.status(403).send('URL does not exist');
   }
   if (urlDatabase[req.params.id].userID !== req.session['user_id']) {
-    return res.send('Access denied.Please <a href="../../login">login</a> as the owner');
+    return res.status(403).send('Access denied.Please <a href="../../login">login</a> as the owner');
   }
   if (urlDatabase[req.params.id].id !== req.session['user_id']){
-    const templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id]["longURL"] , user: req.session['user_id']};
+    const templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id]["longURL"] , user: users[req.session['user_id']]};
     return res.render("urls_show", templateVars);
   }
 });
@@ -190,36 +193,23 @@ app.post("/urls/:id/delete", (req,res) => {
     return res.redirect("/urls")
   }
 });
-
-
-
-app.get("/u/:shortURL", (req, res) => {
-  const longURL = "www.google.com";
-  res.redirect(longURL);
+/*
+** Anyone can visit the website with its existing short URL
+*/
+app.get("/u/:id", (req, res) => {
+  if (!urlDatabase.hasOwnProperty(req.params.id)) {
+    return res.status(403).send('URL does not exist.');
+  }
+  return res.redirect(urlDatabase[req.params.id].longURL);
 });
-
-
-
-
+/*
+**logout
+*/
 app.post('/logout', (req, res) => {
   delete req.session["user_id"];
   res.redirect("/urls");
-  console.log(users);
 });
 
-
-
-
-// app.get("/urls.json", (req, res) => {
-//   res.json(urlDatabase);
-// });
-// app.get("/hello", (req, res) => {
-//   res.send("<html><body>Hello <b>World</b></body></html>\n");
-// });
-// app.post("/urls", (req, res) => {
-//   console.log(req.body);  // Log the POST request body to the console
-//   res.send("Ok");         // Respond with 'Ok' (we will replace this)
-// });
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);

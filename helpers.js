@@ -15,7 +15,6 @@ const urlsForUser = (id, database) => {
   let userURL = {};
   for (let url in database) {
     if (database[url].userID == id) {
-      userURL = {};
       userURL[url] = database[url];
     }
   }
