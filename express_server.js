@@ -45,10 +45,15 @@ let users = {
     password: "dishwasher-funk"
   }
 }
-
+/*
+**database for visitor analysis. Below example is introduced to show the structure of the objected.
+*/
 let visited = {
   "b6UTxQ": {
-    timesVisited: 0
+    timesVisited: 0,
+    visited:{
+      "2042.02.29": "woody6"
+    }
   }
 };
 
@@ -137,7 +142,7 @@ app.post('/urls',(req, res) => {
   if (req.session['user_id']) {
     let newShortURL = generateRandomString();
     urlDatabase[newShortURL] = { longURL: req.body.longURL, userID: req.session.user_id };
-    visited[newShortURL] = {timesVisited: 0};
+    visited[newShortURL] = {timesVisited: 0, visited: {} };
     req.session.Visitors = [];
     return res.redirect(`/urls/${newShortURL}`);
   }
@@ -168,7 +173,11 @@ app.get("/urls/:id", (req, res) => {
     return res.status(403).send('Access denied.Please <a href="../../login">login</a> as the owner');
   }
   if (urlDatabase[req.params.id].id !== req.session['user_id']){
-    const templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id]["longURL"] , user: users[req.session['user_id']], visited: visited[req.params.id], visitors: req.session.Visitors};
+    const templateVars = { shortURL: req.params.id, 
+                           longURL: urlDatabase[req.params.id]["longURL"] ,
+                           user: users[req.session['user_id']], 
+                           visited: visited[req.params.id], 
+                           visitors: req.session.Visitors};
     return res.render("urls_show", templateVars);
   }
 });
@@ -210,10 +219,14 @@ app.get("/u/:id", (req, res) => {
   if (!urlDatabase.hasOwnProperty(req.params.id)) {
     return res.status(403).send('URL does not exist.');
   }
-  visited[req.params.id].timesVisited++;
-  if (req.session.user_id && !req.session.Visitors.includes(req.session.user_id)){
-    req.session.Visitors.push(req.session.user_id);
+  visited[req.params.id].timesVisited ++;
+  if (req.session.user_id){
+    visited[req.params.id].visited[new Date()] = req.session.user_id;
+    if (!req.session.Visitors.includes(req.session.user_id)) {
+      req.session.Visitors.push(req.session.user_id);
+    }
   }
+  console.log(visited);
   return res.redirect(urlDatabase[req.params.id].longURL);
 });
 /*
