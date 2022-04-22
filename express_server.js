@@ -164,10 +164,10 @@ app.get("/urls/:id", (req, res) => {
 */
 app.post("/urls/:id", (req,res) => {
   if (!req.session['user_id']) {
-    return res.send('Please <a href="../../login">login</a>');
+    return res.status(403).send('Please <a href="../../login">login</a>');
   }
   if (urlDatabase[req.params.id].userID !== req.session['user_id']) {
-    return res.send('Access denied.Please <a href="../../login">login</a> as the owner');
+    return res.status(403).send('Access denied.Please <a href="../../login">login</a> as the owner');
   }
   if (urlDatabase[req.params.id].id !== req.session['user_id']) {
     urlDatabase[req.params.id].longURL = req.body.newURL;
@@ -177,14 +177,18 @@ app.post("/urls/:id", (req,res) => {
 /*
 **delete the URL record. Only owner can access
 */
-app.post("/urls/:shortURL/delete", (req,res) => {
-  const templateVars = { user: users[req.session['user_id']]};
-  if (urlsForUser(users[req.session['user_id']], urlDatabase).hasOwnProperty(req.params.shortURL)) {
-    delete urlDatabase[req.params.shortURL];
+app.post("/urls/:id/delete", (req,res) => {
+  if (!req.session['user_id']) {
+    return res.status(403).send('Please <a href="../../login">login</a>');
+  }
+  if (urlDatabase[req.params.id].userID !== req.session['user_id']) {
+    return res.status(403).send('Access denied.Please <a href="../../login">login</a> as the owner');
+  }
+  
+  if (urlDatabase[req.params.id].userID === req.session['user_id']) {
+    delete urlDatabase[req.params.id];
     return res.redirect("/urls")
   }
-  res.render(login, templateVars);
-
 });
 
 
