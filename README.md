@@ -4,10 +4,10 @@ TinyApp is a full stack web application built with Node and Express that allows 
 
 ## Final Product
 
-["User Registration Page - Please make sure you are registered and logged at the beginning"](https://github.com/beijingdi/tinyapp/blob/master/docs/registration.png)
-["Creat URL Page - Logged in user can create shortened URLs with any URL inputs"](https://github.com/beijingdi/tinyapp/blob/master/docs/createURL.png)
-["URL Display Page - Logged in user can view, edit or delete the short URLs they created"](https://github.com/beijingdi/tinyapp/blob/master/docs/editURL.png)
-["URL Edit Page - Logged in user edit the short URLs created by themselves by assigning new long URLs to them"](https://github.com/beijingdi/tinyapp/blob/master/docs/editURL.png)
+!["User Registration Page - Please make sure you are registered and logged at the beginning"](https://github.com/beijingdi/tinyapp/blob/master/docs/registration.png)
+!["Creat URL Page - Logged in user can create shortened URLs with any URL inputs"](https://github.com/beijingdi/tinyapp/blob/master/docs/createURL.png)
+!["URL Display Page - Logged in user can view, edit or delete the short URLs they created"](https://github.com/beijingdi/tinyapp/blob/master/docs/editURL.png)
+!["URL Edit Page - Logged in user edit the short URLs created by themselves by assigning new long URLs to them"](https://github.com/beijingdi/tinyapp/blob/master/docs/editURL.png)
 
 ## Dependencies
 
