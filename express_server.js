@@ -206,7 +206,7 @@ app.get("/u/:id", (req, res) => {
 **logout
 */
 app.post('/logout', (req, res) => {
-  delete req.session["user_id"];
+  req.session = null;
   res.redirect("/urls");
 });
 
