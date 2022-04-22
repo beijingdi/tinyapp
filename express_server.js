@@ -138,8 +138,7 @@ app.post('/urls',(req, res) => {
     let newShortURL = generateRandomString();
     urlDatabase[newShortURL] = { longURL: req.body.longURL, userID: req.session.user_id };
     visited[newShortURL] = {timesVisited: 0};
-    //visited[newShortURL].timesVisited = 0;
-    console.log(visited);
+    req.session.Visitors = [];
     return res.redirect(`/urls/${newShortURL}`);
   }
   res.status(403).send('Please <a href="/login">login</a>')
@@ -169,8 +168,7 @@ app.get("/urls/:id", (req, res) => {
     return res.status(403).send('Access denied.Please <a href="../../login">login</a> as the owner');
   }
   if (urlDatabase[req.params.id].id !== req.session['user_id']){
-    const templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id]["longURL"] , user: users[req.session['user_id']], visited: visited[req.params.id]};
-    console.log(templateVars);
+    const templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id]["longURL"] , user: users[req.session['user_id']], visited: visited[req.params.id], visitors: req.session.Visitors};
     return res.render("urls_show", templateVars);
   }
 });
@@ -213,6 +211,9 @@ app.get("/u/:id", (req, res) => {
     return res.status(403).send('URL does not exist.');
   }
   visited[req.params.id].timesVisited++;
+  if (req.session.user_id && !req.session.Visitors.includes(req.session.user_id)){
+    req.session.Visitors.push(req.session.user_id);
+  }
   return res.redirect(urlDatabase[req.params.id].longURL);
 });
 /*
